@@ -1,97 +1,141 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# WeatherNav - UAE Weather Navigation App
 
-# Getting Started
+A React Native CLI app that shows real-time weather conditions across the UAE on an interactive Mapbox map. Users can filter locations by weather type (rain, sunny, cloudy, etc.) and get turn-by-turn navigation to any destination.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Features
 
-## Step 1: Start Metro
+- Interactive Mapbox map centered on UAE
+- Real-time weather data from Open-Meteo API (free, no API key)
+- Weather markers showing temperature and conditions for 16 UAE cities
+- Filter locations by weather type: Rain, Sunny, Cloudy, Storm, Fog, Snow
+- Tap any marker to see detailed weather (temperature, humidity, wind, 7-day forecast)
+- Turn-by-turn navigation to selected locations using Mapbox Navigation SDK
+- Local offline database (WatermelonDB) for caching and favorites
+- Android-optimized
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Tech Stack
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+| Layer | Technology |
+|---|---|
+| Framework | React Native CLI 0.84 (TypeScript) |
+| Maps | `@rnmapbox/maps` (Mapbox Maps SDK) |
+| Navigation | `@pawan-pk/react-native-mapbox-navigation` |
+| Weather API | [Open-Meteo](https://open-meteo.com) (free, no key) |
+| Local DB | WatermelonDB (SQLite) |
+| State | Zustand |
+| UI | Bottom Sheet, Reanimated, Gesture Handler |
 
-```sh
-# Using npm
-npm start
+## Prerequisites
 
-# OR using Yarn
-yarn start
+- Node.js >= 18
+- JDK 17
+- Android Studio with:
+  - Android SDK 36
+  - Android Build Tools 36.0.0
+  - NDK 27.1.12297006
+- A Mapbox account (free): [Sign up](https://account.mapbox.com/auth/signup/)
+
+## Setup
+
+### 1. Clone and Install
+
+```bash
+git clone <repo-url>
+cd WeatherNav
+npm install
 ```
 
-## Step 2: Build and run your app
+### 2. Mapbox Tokens
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+You need **two** Mapbox tokens:
 
-### Android
+#### a) Public Token (starts with `pk.ey...`)
+1. Go to [Mapbox Tokens](https://account.mapbox.com/access-tokens/)
+2. Copy your **Default public token**
+3. Replace the placeholder in:
+   - `android/app/src/main/res/values/mapbox_access_token.xml`
+   - `src/utils/constants.ts` (the `MAPBOX_ACCESS_TOKEN` variable)
 
-```sh
-# Using npm
-npm run android
+#### b) Secret Token (starts with `sk.ey...`)
+1. Go to [Mapbox Tokens](https://account.mapbox.com/access-tokens/)
+2. Click **Create a token**
+3. Enable the **Downloads:Read** scope
+4. Copy the token
+5. Replace `YOUR_SECRET_MAPBOX_TOKEN_HERE` in `android/gradle.properties`
 
-# OR using Yarn
-yarn android
+### 3. Run the App
+
+```bash
+# Start Metro bundler
+npx react-native start
+
+# In another terminal, build and run on Android
+npx react-native run-android
 ```
 
-### iOS
+## Project Structure
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+```
+src/
+├── screens/
+│   ├── MapScreen.tsx          # Main map with weather markers
+│   └── NavigationScreen.tsx   # Turn-by-turn navigation
+├── components/
+│   ├── WeatherFilterBar.tsx   # Filter buttons (Rain, Sunny, etc.)
+│   ├── WeatherBottomSheet.tsx # Detail sheet with weather info
+│   ├── LoadingOverlay.tsx     # Loading indicator
+│   └── ErrorBanner.tsx        # Error display
+├── services/
+│   └── weatherService.ts      # Open-Meteo API integration
+├── hooks/
+│   ├── useWeather.ts          # Weather data hook
+│   └── useLocation.ts         # GPS location hook
+├── store/
+│   └── weatherStore.ts        # Zustand state management
+├── database/
+│   ├── index.ts               # WatermelonDB setup
+│   ├── schema/index.ts        # DB schema
+│   └── models/                # DB models
+├── types/
+│   └── index.ts               # TypeScript interfaces
+└── utils/
+    ├── weatherCodes.ts        # WMO weather code mappings
+    ├── constants.ts           # Config & UAE cities
+    └── helpers.ts             # Utility functions
 ```
 
-Then, and every time you update your native dependencies, run:
+## How It Works
 
-```sh
-bundle exec pod install
-```
+1. **App loads** - Map shows UAE centered view with user's location
+2. **Weather fetched** - Open-Meteo API returns weather for 16 UAE cities
+3. **Markers displayed** - Each city shows weather icon + temperature
+4. **Filter** - Tap a filter (e.g., "Rain") to only show rainy locations
+5. **Tap marker** - Bottom sheet shows detailed weather + 7-day forecast
+6. **Navigate** - Tap "Navigate Here" for turn-by-turn directions
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## APIs Used
 
-```sh
-# Using npm
-npm run ios
+### Open-Meteo (Weather)
+- **Cost:** Free for non-commercial use
+- **API Key:** Not required
+- **Docs:** https://open-meteo.com/en/docs
+- **Data:** Temperature, rain, wind, humidity, cloud cover, weather codes, 7-day forecast
 
-# OR using Yarn
-yarn ios
-```
+### Mapbox (Maps + Navigation)
+- **Cost:** Free tier covers 25,000 map MAU + 100 navigation MAU
+- **Docs:** https://docs.mapbox.com
+- **Features:** Interactive maps, turn-by-turn navigation, geocoding
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## Free Tier Limits
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+For 3 users, everything is well within free limits:
 
-## Step 3: Modify your app
+| Service | Free Limit | Your Usage |
+|---|---|---|
+| Mapbox Maps | 25,000 MAU | 3 |
+| Mapbox Navigation | 100 MAU | 3 |
+| Open-Meteo | 10,000 requests/day | ~50-100/day |
 
-Now that you have successfully run the app, let's make changes!
+## License
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+MIT

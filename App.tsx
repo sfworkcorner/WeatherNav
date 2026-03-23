@@ -1,38 +1,54 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, {useState, useCallback} from 'react';
+import {StatusBar, StyleSheet} from 'react-native';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import MapScreen from './src/screens/MapScreen';
+import NavigationScreen from './src/screens/NavigationScreen';
+import {useWeatherStore} from './src/store/weatherStore';
+import {Coordinates} from './src/types';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+export default function App(): React.JSX.Element {
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [destination, setDestination] = useState<Coordinates | null>(null);
+  const userLocation = useWeatherStore(state => state.userLocation);
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
+  const handleStartNavigation = useCallback(
+    (dest: Coordinates) => {
+      if (userLocation) {
+        setDestination(dest);
+        setIsNavigating(true);
+      }
+    },
+    [userLocation],
   );
-}
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
+  const handleNavigationFinished = useCallback(() => {
+    setIsNavigating(false);
+    setDestination(null);
+  }, []);
+
+  const handleCancelNavigation = useCallback(() => {
+    setIsNavigating(false);
+    setDestination(null);
+  }, []);
 
   return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
+    <GestureHandlerRootView style={styles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent
       />
-    </View>
+      {isNavigating && destination && userLocation ? (
+        <NavigationScreen
+          origin={userLocation}
+          destination={destination}
+          onNavigationFinished={handleNavigationFinished}
+          onCancelNavigation={handleCancelNavigation}
+        />
+      ) : (
+        <MapScreen onStartNavigation={handleStartNavigation} />
+      )}
+    </GestureHandlerRootView>
   );
 }
 
@@ -41,5 +57,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
-export default App;
